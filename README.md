@@ -58,7 +58,7 @@ Executing [`scripts/debloat.sh`](scripts/debloat.sh) disables:
 - **Dead DroidLogic Services:** `com.droidlogic.otaupgrade`, `com.droidlogic.readlog`
 - **Live Wallpapers & Screensavers:** `galaxy4`, `holospiral`, `phasebeam`, `noisefield`, `magicsmoke`, `phototable`
 - **Google Play Services:** `com.google.android.gms`, `com.android.vending`, `gsf`, syncadapters.
-- **Result:** RAM usage drops from ~790 MB down to **~450 MB**, leaving **~1.25 GB of free RAM** available for media players, Lampa, and TorrServer.
+- **Result:** RAM usage drops from ~790 MB down to **~450 MB**, leaving **~1.25 GB of free RAM** available for media players and background streaming services.
 
 #### 5. Persistent Boot Script
 All system tweaks are stored in `/system/su.d/01_performance.sh`. The SuperSU daemon automatically executes scripts in `/system/su.d/` with root privileges at every boot. It also persists `setprop service.adb.tcp.port 5555` to keep wireless ADB open across reboots.
@@ -79,48 +79,38 @@ All system tweaks are stored in `/system/su.d/01_performance.sh`. The SuperSU da
 2. **Cool Tool (`ds.cpuoverlay`):**
    - Lightweight floating overlay for real-time CPU% graph, free RAM, and network I/O.
 
-### 🎬 Video Playback & Player Setup (Vimu, Just Player, MPV)
+### 🎬 Video Playback & Player Setup
 
-On 2 GB Amlogic devices, **VLC suffers from continuous Native Heap memory growth** during network streams (especially 10-bit HEVC), swelling past 450 MB until Android's `lowmemorykiller` terminates playback after ~12–15 minutes. To ensure rock-solid video playback and streaming, use dedicated players tuned for Amlogic hardware decoding.
+Streaming high-bitrate movies and torrents (especially 10-bit HEVC BDRips) on the MINI M8S II (Amlogic S905X, Android 6.0.1) reveals critical software quirks across popular players:
 
-#### 1. Vimu Media Player — Recommended for Everyday & Family Viewing
-The undisputed gold standard for Amlogic TV boxes.
-- **Ultra-low RAM Footprint:** Consumes only **~80–100 MB RAM** without memory bloat.
-- **Amlogic Engine v2:** Direct hardware decoding via MediaCodec / AmCodec with zero dropped frames.
-- **TV Features:** Automatic Frame Rate (AFR) matching (23.976/24/50/60 Hz), audio passthrough (AC3/DTS/E-AC3), voice/dialogue normalization, and native D-pad remote navigation.
-- **Installation:**
-  - Official web installer: [vimu.tv/get](https://vimu.tv/get) (`VimuInstaller.apk`) or via ADB:
-    ```bash
-    adb install VimuInstaller.apk
-    ```
-  - Google Play: [Vimu Media Player for TV](https://play.google.com/store/apps/details?id=net.gtvbox.videoplayer) (`net.gtvbox.videoplayer`).
-  - 4PDA community thread: [4pda.to/forum/index.php?showtopic=420658](https://4pda.to/forum/index.php?showtopic=420658).
-- **Recommended In-App Settings:**
-  - *Decoder Engine:* Select **«v2 (MediaCodec)»**.
-  - *Audio:* Enable *Passthrough* (if using soundbar/receiver) or *Voice Boost* for TV speakers.
+#### Comparison & Hardware Pitfalls:
+* ❌ **VLC Media Player:** Suffers from severe **Native Heap memory leakage** during network streaming, swelling past 450 MB until Android's `lowmemorykiller` terminates the playback after ~12–15 minutes.
+* ❌ **Just (Video) Player (ExoPlayer):** Results in **complete silence** on common torrent audio tracks (AC3, E-AC3, DTS). The factory firmware registers a broken dummy decoder `AML.google.ac3.decoder` in `/system/etc/media_codecs.xml`, which MediaCodec uses by default, outputting empty audio samples.
+* ❌ **Vimu Media Player:** Newer versions fail installation (`INSTALL_FAILED_OLDER_SDK` requiring Android 7.0+), while older builds can output digital static / color noise artifacts on 10-bit HEVC streams due to hardware overlay/DV pipeline mismatches.
+* ✅ **mpv-android — Recommended Solution:** The only player that reliably passes all hardware tests on this device.
 
-#### 2. Just (Video) Player — Open-Source Alternative for Everyday Viewing
-A clean, lightweight open-source player built on Google ExoPlayer.
-- **Available in F-Droid & Google Play:** [`com.brouken.player`](https://f-droid.org/en/packages/com.brouken.player/) (compatible with Android 6.0+).
-- **Low Memory Footprint:** Consumes only **~100–120 MB RAM** without leaking memory during network streaming.
-- **Out-of-the-Box TV Support:** Native D-pad navigation, Leanback TV interface, MediaCodec hardware decoding, HDR, and Auto Frame Rate (AFR) matching.
-- **Best Use Case:** Excellent 100% free and open-source alternative to Vimu for regular movies if you prefer F-Droid over proprietary installers.
+---
 
-#### 3. mpv-android — Recommended for Language Learning & Subtitles
-Ideal for studying English with foreign audio and subtitles.
-- **Clean Subtitles on Pause:** Pausing cleanly freezes the current video frame without any intrusive progress bar, timeline, or bottom darkening overlays obscuring the subtitles. Pressing `DPAD_DOWN` displays controls only when requested.
-- **Available in F-Droid:** [`is.xyz.mpv`](https://f-droid.org/en/packages/is.xyz.mpv/) (compatible with Android 5.0+).
-- **Critical `mpv.conf` Memory Optimization:**  
-  By default, mpv demuxes network video into RAM. To prevent out-of-memory crashes on 2 GB devices, configure **Settings** → **Advanced** → **Edit mpv.conf**:
-  ```ini
-  # Direct Amlogic VPU decoding via SurfaceView (bypasses RAM)
-  hwdec=mediacodec
-  vo=gpu
+#### 🏆 mpv-android Configuration Guide
+- **Universal Audio Playback:** Bundles its own internal **FFmpeg (libavcodec)** audio decoder, completely bypassing the broken system `AML.google.ac3.decoder`. Flawlessly downmixes AC3, E-AC3, DTS, and TrueHD into 16-bit stereo PCM.
+- **Hardware Acceleration:** Hardware-accelerated video decoding via Amlogic's VPU (`OMX.amlogic.hevc.decoder.awesome`) with **total CPU load of only ~3%**.  
+  *(Note: Standard `hwdec=mediacodec` fails on Android 6 due to missing `AImageReader_newWithUsage`; `hwdec=mediacodec-copy` must be used instead).*
+- **Zero Memory Leaks:** RAM usage is capped at **~120 MB RAM** (leaving >1.2 GB of free RAM), preventing any Low-Memory-Killer terminations.
+- **Clean Subtitles on Pause:** Pausing cleanly freezes the current video frame with zero on-screen overlays, timelines, or gradient dimming over the subtitles. Pressing `DPAD_DOWN` displays controls only when requested.
 
-  # Cap demuxer cache to prevent Low-Memory-Killer terminations
-  demuxer-max-bytes=32M
-  demuxer-max-back-bytes=16M
-  ```
+**Installation & Configuration:**
+1. Install **mpv-android** from [F-Droid](https://f-droid.org/en/packages/is.xyz.mpv/) (or Google Play).
+2. Configure `/sdcard/mpv/mpv.conf` (or inside MPV → **Settings** → **Advanced** → **Edit mpv.conf**):
+   ```ini
+   # Amlogic hardware decoding for Android 6
+   hwdec=mediacodec-copy
+   vo=gpu
+   gpu-context=android
+
+   # Cap demuxer cache to prevent Low-Memory-Killer crashes
+   demuxer-max-bytes=32M
+   demuxer-max-back-bytes=16M
+   ```
 
 ---
 
@@ -190,7 +180,7 @@ adb connect <TV_BOX_IP>:5555
 - **Неработающие службы DroidLogic:** `com.droidlogic.otaupgrade`, `com.droidlogic.readlog`
 - **Фоновые живые обои и заставки:** `galaxy4`, `holospiral`, `phasebeam`, `noisefield`, `magicsmoke`, `phototable`
 - **Сервисы Google Play:** `com.google.android.gms`, `com.android.vending`, `gsf`, адаптеры контактов/календаря.
-- **Результат:** Занятая память падает с ~790 МБ до **~450 МБ**, оставляя **~1.25 ГБ свободной оперативной памяти** для плееров, Lampa и TorrServer.
+- **Результат:** Занятая память падает с ~790 МБ до **~450 МБ**, оставляя **~1.25 ГБ свободной оперативной памяти** для медиаплееров и фоновых сервисов стриминга.
 
 #### 5. Автозапуск при включении приставки
 Скрипт помещен в `/system/su.d/01_performance.sh`. Служба SuperSU `daemonsu` автоматически выполняет файлы из `/system/su.d/` с правами root при каждой загрузке. Скрипт также фиксирует сетевой порт ADB 5555 (`service.adb.tcp.port 5555`), чтобы не терять удаленный доступ после перезагрузки.
@@ -211,48 +201,38 @@ adb connect <TV_BOX_IP>:5555
 2. **Cool Tool (`ds.cpuoverlay`):**
    - Компактный плавающий индикатор поверх всех окон с графиком нагрузки CPU, объемом свободной памяти и сетевой активностью.
 
-### 🎬 Настройка видеоплееров (Vimu, Just Player, MPV)
+### 🎬 Настройка видеоплееров
 
-На приставках с 2 ГБ ОЗУ **VLC страдает от прогрессирующей утечки памяти (Native Heap)** при сетевом воспроизведении (особенно 10-битных HEVC BDRip торрентов). Память плеера за 10–15 минут раздувается свыше 450 МБ, пока системный демон `lowmemorykiller` ядра Android принудительно не «рубит» активный процесс. Для стабильного воспроизведения видео и стриминга следует использовать оптимизированные плееры.
+Воспроизведение и стриминг видео с высоким битрейтом (в особенности 10-битных HEVC BDRip торрентов) на MINI M8S II (Amlogic S905X, Android 6.0.1) выявляет критические программные нюансы популярных плееров:
 
-#### 1. Vimu Media Player — Рекомендация для повседневного семейного просмотра
-Признанный эталонный плеер для ТВ-боксов на процессорах Amlogic.
-- **Минимальное потребление RAM:** Всего **~80–100 МБ ОЗУ**, полное отсутствие утечек при длительном воспроизведении.
-- **Движок v2 (MediaCodec):** Нативное аппаратное декодирование силами чипа Amlogic без нагрева и пропусков кадров.
-- **ТВ-функционал:** Настоящий автофреймрейт (AFR, переключение развертки экрана 23.976 / 24 / 50 / 60 Гц), сквозной проход звука (Passthrough AC3/DTS/E-AC3), функция «Усиление голоса» для комфортного ночного просмотра, удобное управление любым пультом.
-- **Откуда установить:**
-  - Официальный установщик: [vimu.tv/get](https://vimu.tv/get) (`VimuInstaller.apk`) или установка через ADB:
-    ```bash
-    adb install VimuInstaller.apk
-    ```
-  - Google Play: [Vimu Media Player for TV](https://play.google.com/store/apps/details?id=net.gtvbox.videoplayer) (`net.gtvbox.videoplayer`).
-  - Тема на 4PDA: [4pda.to/forum/index.php?showtopic=420658](https://4pda.to/forum/index.php?showtopic=420658).
-- **Рекомендуемые настройки в Vimu:**
-  - *Движок декодирования:* Выбрать **«v2 (MediaCodec)»**.
-  - *Аудио:* Включить *«Сквозной проход (Passthrough)»* при наличии ресивера/саундбара или *«Автовыравнивание / Усиление голоса»* для динамиков телевизора.
+#### Сравнение и аппаратные нюансы:
+* ❌ **VLC Media Player:** Страдает от сильной **утечки памяти (Native Heap)** при сетевом воспроизведении: память раздувается свыше 450 МБ, пока Android `lowmemorykiller` не завершает процесс через ~12–15 минут.
+* ❌ **Just (Video) Player (ExoPlayer):** Приводит к **полной тишине** на распространенных аудиодорожках (AC3, E-AC3, DTS). В заводской прошивке зарегистрирован некорректный декодер-заглушка `AML.google.ac3.decoder` в `/system/etc/media_codecs.xml`, к которому по умолчанию обращается MediaCodec и отдает пустые сэмплы.
+* ❌ **Vimu Media Player:** Новые версии не устанавливаются (`INSTALL_FAILED_OLDER_SDK`, требуют Android 7.0+), а старые сборки выводят артефакты в виде цифрового цветного шума («радуги») на 10-битных HEVC-потоках из-за несовместимости аппаратного оверлея / пайплайна DV.
+* ✅ **mpv-android — Рекомендуемое решение:** Единственный плеер, надежно прошедший все аппаратные тесты на данном устройстве.
 
-#### 2. Just (Video) Player — Open-Source альтернатива для повседневного просмотра
-Простой, быстрый плеер с открытым исходным кодом на базе библиотеки Google ExoPlayer.
-- **Доступен в F-Droid и Google Play:** Пакет [`com.brouken.player`](https://f-droid.org/en/packages/com.brouken.player/) (совместим с Android 6.0+).
-- **Низкое потребление памяти:** Всего **~100–120 МБ ОЗУ**, стабилен при длительном сетевом стриминге.
-- **Удобство на ТВ:** Нативная поддержка пульта (D-pad), аппаратное декодирование MediaCodec, поддержка HDR и автофреймрейта (AFR).
-- **Когда использовать:** Лучшая бесплатная open-source замена Vimu для обычного просмотра кино, если не хочется ставить сторонние установщики.
+---
 
-#### 3. mpv-android — Рекомендация для изучения языков и субтитров
-Идеальный инструмент для просмотра фильмов на английском языке с субтитрами.
-- **Чистый стоп-кадр на паузе:** При нажатии на паузу видео мгновенно замирает на текущем кадре. Никакие панели навигации, таймлайны и градиентные затемнения не перекрывают субтитры. При необходимости вызвать меню управления достаточно нажать стрелку `ВНИЗ` (DPAD_DOWN) на пульте.
-- **Доступен в F-Droid:** Пакет [`is.xyz.mpv`](https://f-droid.org/en/packages/is.xyz.mpv/) (совместим с Android 5.0+).
-- **Обязательная настройка `mpv.conf` против вылетов по памяти:**  
-  По умолчанию mpv кэширует сетевой поток без жестких лимитов. Чтобы плеер не закрывался системой по OOM, в приложении перейдите в **Settings** → **Advanced** → **Edit mpv.conf** и пропишите:
-  ```ini
-  # Аппаратное декодирование Amlogic в видеобуфер SurfaceView
-  hwdec=mediacodec
-  vo=gpu
+#### 🏆 Руководство по настройке mpv-android
+- **Универсальное воспроизведение звука:** Содержит собственный встроенный аудиодекодер **FFmpeg (libavcodec)**, полностью обходя проблемный системный `AML.google.ac3.decoder`. Безупречно микширует AC3, E-AC3, DTS и TrueHD в 16-битный стерео PCM.
+- **Аппаратное ускорение видео:** Аппаратное декодирование силами VPU чипа Amlogic (`OMX.amlogic.hevc.decoder.awesome`) с **общей нагрузкой на CPU всего ~3%**.  
+  *(Примечание: стандартный режим `hwdec=mediacodec` падает на Android 6 из-за отсутствия `AImageReader_newWithUsage`; обязательно использовать `hwdec=mediacodec-copy`).*
+- **Отсутствие утечек памяти:** Потребление RAM ограничено на уровне **~120 МБ ОЗУ** (остается >1.2 ГБ свободной памяти), исключая выгрузку плеера демоном Low-Memory-Killer.
+- **Чистый стоп-кадр на паузе (субтитры для изучения языков):** При паузе воспроизведение мгновенно замирает без экранных панелей, таймлайнов или градиентных затемнений поверх субтитров. Нажатие стрелки `ВНИЗ` (DPAD_DOWN) отображает меню управления только при необходимости.
 
-  # Лимит кэша (предотвращает срабатывание Low Memory Killer)
-  demuxer-max-bytes=32M
-  demuxer-max-back-bytes=16M
-  ```
+**Установка и настройка:**
+1. Установите **mpv-android** из [F-Droid](https://f-droid.org/en/packages/is.xyz.mpv/) (или Google Play).
+2. Настройте файл `/sdcard/mpv/mpv.conf` (или внутри MPV: **Настройки** → **Дополнительно** → **Редактировать mpv.conf**):
+   ```ini
+   # Аппаратное декодирование Amlogic для Android 6
+   hwdec=mediacodec-copy
+   vo=gpu
+   gpu-context=android
+
+   # Лимит буфера demuxer против выгрузки по Low-Memory-Killer
+   demuxer-max-bytes=32M
+   demuxer-max-back-bytes=16M
+   ```
 
 ---
 
