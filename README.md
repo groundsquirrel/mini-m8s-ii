@@ -79,7 +79,7 @@ All system tweaks are stored in `/system/su.d/01_performance.sh`. The SuperSU da
 2. **Cool Tool (`ds.cpuoverlay`):**
    - Lightweight floating overlay for real-time CPU% graph, free RAM, and network I/O.
 
-### 🎬 Video Playback & Player Setup (Vimu & MPV)
+### 🎬 Video Playback & Player Setup (Vimu, Just Player, MPV)
 
 On 2 GB Amlogic devices, **VLC suffers from continuous Native Heap memory growth** during network streams (especially 10-bit HEVC), swelling past 450 MB until Android's `lowmemorykiller` terminates playback after ~12–15 minutes. To ensure rock-solid video playback and streaming, use dedicated players tuned for Amlogic hardware decoding.
 
@@ -99,7 +99,14 @@ The undisputed gold standard for Amlogic TV boxes.
   - *Decoder Engine:* Select **«v2 (MediaCodec)»**.
   - *Audio:* Enable *Passthrough* (if using soundbar/receiver) or *Voice Boost* for TV speakers.
 
-#### 2. mpv-android — Recommended for Language Learning & Subtitles
+#### 2. Just (Video) Player — Open-Source Alternative for Everyday Viewing
+A clean, lightweight open-source player built on Google ExoPlayer.
+- **Available in F-Droid & Google Play:** [`com.brouken.player`](https://f-droid.org/en/packages/com.brouken.player/) (compatible with Android 6.0+).
+- **Low Memory Footprint:** Consumes only **~100–120 MB RAM** without leaking memory during network streaming.
+- **Out-of-the-Box TV Support:** Native D-pad navigation, Leanback TV interface, MediaCodec hardware decoding, HDR, and Auto Frame Rate (AFR) matching.
+- **Best Use Case:** Excellent 100% free and open-source alternative to Vimu for regular movies if you prefer F-Droid over proprietary installers.
+
+#### 3. mpv-android — Recommended for Language Learning & Subtitles
 Ideal for studying English with foreign audio and subtitles.
 - **Clean Subtitles on Pause:** Pausing cleanly freezes the current video frame without any intrusive progress bar, timeline, or bottom darkening overlays obscuring the subtitles. Pressing `DPAD_DOWN` displays controls only when requested.
 - **Available in F-Droid:** [`is.xyz.mpv`](https://f-droid.org/en/packages/is.xyz.mpv/) (compatible with Android 5.0+).
@@ -204,7 +211,7 @@ adb connect <TV_BOX_IP>:5555
 2. **Cool Tool (`ds.cpuoverlay`):**
    - Компактный плавающий индикатор поверх всех окон с графиком нагрузки CPU, объемом свободной памяти и сетевой активностью.
 
-### 🎬 Настройка видеоплееров (Vimu и MPV)
+### 🎬 Настройка видеоплееров (Vimu, Just Player, MPV)
 
 На приставках с 2 ГБ ОЗУ **VLC страдает от прогрессирующей утечки памяти (Native Heap)** при сетевом воспроизведении (особенно 10-битных HEVC BDRip торрентов). Память плеера за 10–15 минут раздувается свыше 450 МБ, пока системный демон `lowmemorykiller` ядра Android принудительно не «рубит» активный процесс. Для стабильного воспроизведения видео и стриминга следует использовать оптимизированные плееры.
 
@@ -224,7 +231,14 @@ adb connect <TV_BOX_IP>:5555
   - *Движок декодирования:* Выбрать **«v2 (MediaCodec)»**.
   - *Аудио:* Включить *«Сквозной проход (Passthrough)»* при наличии ресивера/саундбара или *«Автовыравнивание / Усиление голоса»* для динамиков телевизора.
 
-#### 2. mpv-android — Рекомендация для изучения языков и субтитров
+#### 2. Just (Video) Player — Open-Source альтернатива для повседневного просмотра
+Простой, быстрый плеер с открытым исходным кодом на базе библиотеки Google ExoPlayer.
+- **Доступен в F-Droid и Google Play:** Пакет [`com.brouken.player`](https://f-droid.org/en/packages/com.brouken.player/) (совместим с Android 6.0+).
+- **Низкое потребление памяти:** Всего **~100–120 МБ ОЗУ**, стабилен при длительном сетевом стриминге.
+- **Удобство на ТВ:** Нативная поддержка пульта (D-pad), аппаратное декодирование MediaCodec, поддержка HDR и автофреймрейта (AFR).
+- **Когда использовать:** Лучшая бесплатная open-source замена Vimu для обычного просмотра кино, если не хочется ставить сторонние установщики.
+
+#### 3. mpv-android — Рекомендация для изучения языков и субтитров
 Идеальный инструмент для просмотра фильмов на английском языке с субтитрами.
 - **Чистый стоп-кадр на паузе:** При нажатии на паузу видео мгновенно замирает на текущем кадре. Никакие панели навигации, таймлайны и градиентные затемнения не перекрывают субтитры. При необходимости вызвать меню управления достаточно нажать стрелку `ВНИЗ` (DPAD_DOWN) на пульте.
 - **Доступен в F-Droid:** Пакет [`is.xyz.mpv`](https://f-droid.org/en/packages/is.xyz.mpv/) (совместим с Android 5.0+).
