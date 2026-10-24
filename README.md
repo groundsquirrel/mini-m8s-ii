@@ -110,6 +110,10 @@ Streaming high-bitrate movies and torrents (especially 10-bit HEVC BDRips) on th
    # Cap demuxer cache to prevent Low-Memory-Killer crashes
    demuxer-max-bytes=32M
    demuxer-max-back-bytes=16M
+
+   # Larger subtitle and OSD font size for TV viewing distance
+   sub-font-size=75
+   osd-font-size=65
    ```
 
 ---
@@ -232,6 +236,10 @@ adb connect <TV_BOX_IP>:5555
    # Лимит буфера demuxer против выгрузки по Low-Memory-Killer
    demuxer-max-bytes=32M
    demuxer-max-back-bytes=16M
+
+   # Увеличенный шрифт субтитров и экранного меню для ТВ-экрана
+   sub-font-size=75
+   osd-font-size=65
    ```
 
 ---
