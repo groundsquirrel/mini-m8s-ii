@@ -26,7 +26,11 @@ adb shell "su -c 'sh /system/su.d/01_performance.sh'"
 echo "4. Running debloat to free ~500 MB RAM..."
 bash "${SCRIPT_DIR}/debloat.sh"
 
-echo "5. Remounting /system read-only..."
+echo "5. Pushing mpv.conf to /sdcard/mpv/mpv.conf..."
+adb shell "mkdir -p /sdcard/mpv"
+adb push "${SCRIPT_DIR}/mpv.conf" /sdcard/mpv/mpv.conf
+
+echo "6. Remounting /system read-only..."
 adb shell "su -c 'mount -o remount,ro /system'"
 
 echo ""
