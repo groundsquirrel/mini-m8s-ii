@@ -26,9 +26,10 @@ adb shell "su -c 'sh /system/su.d/01_performance.sh'"
 echo "4. Running debloat to free ~500 MB RAM..."
 bash "${SCRIPT_DIR}/debloat.sh"
 
-echo "5. Pushing mpv.conf to /sdcard/mpv/mpv.conf..."
+echo "5. Pushing mpv.conf to /sdcard/mpv/mpv.conf and mpv-android internal storage..."
 adb shell "mkdir -p /sdcard/mpv"
 adb push "${SCRIPT_DIR}/mpv.conf" /sdcard/mpv/mpv.conf
+adb shell "su -c 'if [ -d /data/data/is.xyz.mpv/files ]; then owner=\$(stat -c %u:%g /data/data/is.xyz.mpv/files); cp /sdcard/mpv/mpv.conf /data/data/is.xyz.mpv/files/mpv.conf && chown \$owner /data/data/is.xyz.mpv/files/mpv.conf && chmod 600 /data/data/is.xyz.mpv/files/mpv.conf && am force-stop is.xyz.mpv; fi'"
 
 echo "6. Remounting /system read-only..."
 adb shell "su -c 'mount -o remount,ro /system'"

@@ -126,8 +126,12 @@ Streaming high-bitrate movies and torrents (especially 10-bit HEVC BDRips) on th
    # Fast keyframe seeking without MKV demuxer resync errors on TorrServer streams
    hr-seek=no
 
-   # Larger subtitle and OSD font size for TV viewing distance
+   # Larger subtitle and OSD font size for TV viewing distance + semi-transparent background box
    sub-font-size=75
+   sub-border-style=background-box
+   sub-back-color=0.0/0.0/0.0/0.7
+   sub-shadow-offset=5
+   sub-ass-override=force
    osd-font-size=65
    ```
 
@@ -267,8 +271,12 @@ adb connect <TV_BOX_IP>:5555
    # Быстрая перемотка по ключевым кадрам без сбоев MKV-демуксера на TorrServer
    hr-seek=no
 
-   # Увеличенный шрифт субтитров и экранного меню для ТВ-экрана
+   # Увеличенный шрифт субтитров с полупрозрачным фоном и крупное экранное меню для ТВ-экрана
    sub-font-size=75
+   sub-border-style=background-box
+   sub-back-color=0.0/0.0/0.0/0.7
+   sub-shadow-offset=5
+   sub-ass-override=force
    osd-font-size=65
    ```
 
