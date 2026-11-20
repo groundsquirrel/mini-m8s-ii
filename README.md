@@ -49,7 +49,7 @@ While the hardware is capable of 4K H.265/VP9 decoding, the factory stock firmwa
 - **VFS Cache Pressure:** Tuned `vfs_cache_pressure=70`, `dirty_ratio=20`, and `dirty_background_ratio=5` to prevent sudden write stalls.
 
 #### 3. Network Buffers for 4K / TorrServer Streaming
-- Increased Linux socket buffers to **2 MB** (`net.core.rmem_max=2097152`, `wmem_max=2097152`, `tcp_rmem`, `tcp_wmem`).
+- Increased Linux socket buffers to **4 MB** (`net.core.rmem_max=4194304`, `wmem_max=4194304`, `tcp_rmem`, `tcp_wmem`) and disabled `tcp_slow_start_after_idle`.
 - Prevents dropped TCP packets and buffering loops during high-bitrate video streaming and torrent downloads.
 
 #### 4. Safe Debloat: Freeing ~500 MB RAM
@@ -102,14 +102,29 @@ Streaming high-bitrate movies and torrents (especially 10-bit HEVC BDRips) on th
 1. Install **mpv-android** from [F-Droid](https://f-droid.org/en/packages/is.xyz.mpv/) (or Google Play).
 2. Configure `/sdcard/mpv/mpv.conf` (or inside MPV → **Settings** → **Advanced** → **Edit mpv.conf**):
    ```ini
-   # Amlogic hardware decoding for Android 6
+   # Amlogic hardware decoding for Android 6 + fast GPU profile for Mali-450
    hwdec=mediacodec-copy
    vo=gpu
    gpu-context=android
+   profile=fast
+   vd-lavc-dr=no
 
-   # Cap demuxer cache to prevent Low-Memory-Killer crashes
-   demuxer-max-bytes=32M
+   # Stable stereo 16-bit PCM output (prevents AudioTrack -4 errors on 5.1 E-AC3/AC3/DTS)
+   audio-channels=stereo
+   audio-format=s16
+   ao=audiotrack
+
+   # Network cache & buffering protection for torrent streaming ( prevents 1s buffer loops)
+   cache=yes
+   demuxer-max-bytes=48M
    demuxer-max-back-bytes=16M
+   demuxer-readahead-secs=60
+   cache-pause=yes
+   cache-pause-initial=yes
+   cache-pause-wait=10
+
+   # Fast keyframe seeking without MKV demuxer resync errors on TorrServer streams
+   hr-seek=no
 
    # Larger subtitle and OSD font size for TV viewing distance
    sub-font-size=75
@@ -175,7 +190,7 @@ adb connect <TV_BOX_IP>:5555
 - **Сброс страниц памяти:** Параметры ядра `vfs_cache_pressure=70`, `dirty_ratio=20` и `dirty_background_ratio=5` удерживают метаданные файлов в ОЗУ и предотвращают дисковые зависания.
 
 #### 3. Сетевые буферы для 4K и TorrServer
-- Системные буферы сокетов TCP увеличены до **2 МБ** (`net.core.rmem_max=2097152`, `wmem_max=2097152`, `tcp_rmem`, `tcp_wmem`).
+- Системные буферы сокетов TCP увеличены до **4 МБ** (`net.core.rmem_max=4194304`, `wmem_max=4194304`, `tcp_rmem`, `tcp_wmem`) и отключён сброс окна после простоя (`tcp_slow_start_after_idle=0`).
 - Устраняет прерывания видеопотока и повторную буферизацию при скачках битрейта в онлайн-кинотеатрах и торрент-стриминге.
 
 #### 4. Debloat: Освобождение ~500 МБ RAM
@@ -228,14 +243,29 @@ adb connect <TV_BOX_IP>:5555
 1. Установите **mpv-android** из [F-Droid](https://f-droid.org/en/packages/is.xyz.mpv/) (или Google Play).
 2. Настройте файл `/sdcard/mpv/mpv.conf` (или внутри MPV: **Настройки** → **Дополнительно** → **Редактировать mpv.conf**):
    ```ini
-   # Аппаратное декодирование Amlogic для Android 6
+   # Аппаратное декодирование Amlogic для Android 6 + быстрый профиль для Mali-450
    hwdec=mediacodec-copy
    vo=gpu
    gpu-context=android
+   profile=fast
+   vd-lavc-dr=no
 
-   # Лимит буфера demuxer против выгрузки по Low-Memory-Killer
-   demuxer-max-bytes=32M
+   # Стабильный вывод звука без ошибок AudioTrack (-4) на 5.1 E-AC3/AC3/DTS
+   audio-channels=stereo
+   audio-format=s16
+   ao=audiotrack
+
+   # Сетевой кэш и защита от циклической 1-секундной буферизации на торрентах
+   cache=yes
+   demuxer-max-bytes=48M
    demuxer-max-back-bytes=16M
+   demuxer-readahead-secs=60
+   cache-pause=yes
+   cache-pause-initial=yes
+   cache-pause-wait=10
+
+   # Быстрая перемотка по ключевым кадрам без сбоев MKV-демуксера на TorrServer
+   hr-seek=no
 
    # Увеличенный шрифт субтитров и экранного меню для ТВ-экрана
    sub-font-size=75

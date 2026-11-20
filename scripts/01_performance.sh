@@ -52,11 +52,16 @@ sysctl -w vm.dirty_background_ratio=5 2>/dev/null
 # ------------------------------------------------------------------------------
 # 4. Network Socket Buffers (Streaming & TorrServer Optimization)
 # ------------------------------------------------------------------------------
-# Expand TCP buffers to 2 MB to prevent stutter on 1080p/4K bitrate spikes
-sysctl -w net.core.rmem_max=2097152 2>/dev/null
-sysctl -w net.core.wmem_max=2097152 2>/dev/null
-sysctl -w net.ipv4.tcp_rmem="4096 87380 2097152" 2>/dev/null
-sysctl -w net.ipv4.tcp_wmem="4096 65536 2097152" 2>/dev/null
+# Expand TCP buffers to 4 MB to prevent stutter on 1080p/4K bitrate spikes
+sysctl -w net.core.rmem_max=4194304 2>/dev/null
+sysctl -w net.core.wmem_max=4194304 2>/dev/null
+sysctl -w net.ipv4.tcp_rmem="4096 262144 4194304" 2>/dev/null
+sysctl -w net.ipv4.tcp_wmem="4096 262144 2097152" 2>/dev/null
+sysctl -w net.ipv4.tcp_slow_start_after_idle=0 2>/dev/null
+# Fast TCP keepalive so adbd and streaming sockets recover quickly after Wi-Fi drops
+sysctl -w net.ipv4.tcp_keepalive_time=60 2>/dev/null
+sysctl -w net.ipv4.tcp_keepalive_intvl=10 2>/dev/null
+sysctl -w net.ipv4.tcp_keepalive_probes=3 2>/dev/null
 
 # ------------------------------------------------------------------------------
 # 5. UI Animations & Hardware Acceleration
